@@ -61,7 +61,7 @@ void doit(int fd)
     clienterror(fd, method, "501", "Not implemented", "Tiny does not implement this method");
     return;
   }
-  read_requesthdrs(&rio);
+  // read_requesthdrs(&rio);
   
   /* Parse URI from GET request */
   is_static = parse_uri(uri, filename, cgiargs);  // static or dynamic
