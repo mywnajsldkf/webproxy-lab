@@ -7,6 +7,7 @@
  *   - Fixed sprintf() aliasing issue in serve_static(), and clienterror().
  */
 #include "csapp.h"
+#define malloc
 
 void doit(int fd);
 void read_requesthdrs(rio_t *rp);
@@ -171,12 +172,21 @@ void serve_static(int fd, char *filename, int filesize)
   printf("Response headers: \n");
   printf("%s", buf);
 
-  /* Send response body to client */
-  srcfd = Open(filename, O_RDONLY, 0);
-  srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
-  Close(srcfd);
-  Rio_writen(fd, srcp, filesize);
-  Munmap(srcp, filesize);
+  #ifdef malloc
+    srcfd = Open(filename, O_RDONLY, 0);
+    srcp = Malloc(filesize);
+    Rio_readn(srcfd, srcp, filesize);
+    Close(srcfd);
+    Rio_writen(fd, srcp, filesize);
+    free(srcp);
+  #else
+    /* Send response body to client */
+    srcfd = Open(filename, O_RDONLY, 0);
+    srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
+    Close(srcfd);
+    Rio_writen(fd, srcp, filesize);
+    Munmap(srcp, filesize);
+  #endif
 }
 
 /**
