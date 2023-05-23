@@ -1,5 +1,7 @@
 <html>
-<head><title>test</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>test</title></head>
 <body>
     <div>
         <h1>image</h1>
@@ -7,9 +9,45 @@
     </div>
     <div>
         <h1>video</h1>
-        <video autoplay loop controls style = "width: 1200px; height: 700px;">
+        <video autoplay loop controls style = "width: 500px; height: 300px;">
             <source src="video.mp4" type="video/mp4">
         </video>
+    </div>
+    <div>
+        <h1>my Calculator</h1>
+        <form action="./cgi-bin/adder" method="get" >
+            <div style="display: flex; 
+                        flex-direction: column; 
+                        width: 300px; 
+                        height: 100px; 
+                        justify-content: space-between; 
+                        align-items: center;">
+                <div>
+                    <label for="first">First Number</label>
+                    <input 
+                        type="number" 
+                        name="first" 
+                        placeholder="첫번째 숫자를 입력하세요."
+                        size="200px"/>
+                </div>
+                <div>
+                    <label for="second">Second Number</label>
+                    <input 
+                        type="number"
+                        name="second" 
+                        placeholder="두번째 숫자를 입력하세요."
+                        size="200px"/>
+                </div>
+                <div style="display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;">
+                    <button type="submit">
+                        ADD
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </body>
 </html>

@@ -3,21 +3,27 @@
  */
 /* $begin adder */
 #include "csapp.h"
+#define dynamic
 
 int main(void) {
   char *buf, *p;
+  char *p_arg1, *p_arg2;
   char arg1[MAXLINE], arg2[MAXLINE], content[MAXLINE];
   int n1=0, n2=0;
 
   /* Extract the two arguments */
   if ((buf = getenv("QUERY_STRING")) != NULL)
   {
-    p = strchr(buf, '&');
-    *p = '\0';
-    strcpy(arg1, buf);
-    strcpy(arg2, p+1);
-    n1 = atoi(arg1);
-    n2 = atoi(arg2);
+    #ifdef dynamic
+      sscanf(buf, "first=%d&second=%d", &n1, &n2);
+    #else
+      p = strchr(buf, '&');
+      *p = '\0';
+      strcpy(arg1, buf);
+      strcpy(arg2, p+1);
+      n1 = atoi(arg1);
+      n2 = atoi(arg2);
+    #endif
   }
 
   /* Make the response body */
