@@ -174,11 +174,11 @@ void serve_static(int fd, char *filename, int filesize)
 
   #ifdef malloc
     srcfd = Open(filename, O_RDONLY, 0);
-    srcp = Malloc(filesize);
-    Rio_readn(srcfd, srcp, filesize);
-    Close(srcfd);
-    Rio_writen(fd, srcp, filesize);
-    free(srcp);
+    srcp = Malloc(filesize);  // filesize만큼 동적 메모리를 할당한다.
+    Rio_readn(srcfd, srcp, filesize); // 파일을 읽어서 srcp에 복사한다.
+    Close(srcfd);   // 파일 매핑이 완료되면 파일을 닫는다.
+    Rio_writen(fd, srcp, filesize); // 파일을 읽어서 버퍼쓰기만큼 작성한다.
+    free(srcp); // 사용한 가상 메모리를 반환한다.
   #else
     /* Send response body to client */
     srcfd = Open(filename, O_RDONLY, 0);
