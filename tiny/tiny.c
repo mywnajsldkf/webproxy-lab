@@ -12,9 +12,9 @@
 void doit(int fd);
 void read_requesthdrs(rio_t *rp);
 int parse_uri(char *uri, char *filename, char *cgiargs);
-void serve_static(int fd, char *filename, int filesize);
+void serve_static(int fd, char *filename, int filesize, char *method);
 void get_filetype(char *filename, char *filetype);
-void serve_dynamic(int fd, char *filename, char *cgiargs);
+void serve_dynamic(int fd, char *filename, char *cgiargs, char *method);
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
 
 int main(int argc, char **argv) {
@@ -57,7 +57,7 @@ void doit(int fd)
   printf("%s", buf);
   sscanf(buf, "%s %s %s", method, uri, version);
   // 다른 메서드를 요청하면, 에러 메시지를 보내고, main 루틴으로 돌아온다.
-  if (strcasecmp(method, "GET")) {
+  if (strcasecmp(method, "GET") * strcasecmp(method, "HEAD") != 0) {
     clienterror(fd, method, "501", "Not implemented", "Tiny does not implement this method");
     return;
   }
@@ -79,7 +79,7 @@ void doit(int fd)
       return;
     }
     // 맞다면 클라이언트에게 제공한다.
-    serve_static(fd, filename, sbuf.st_size);
+    serve_static(fd, filename, sbuf.st_size, method);
   }
   else {
     // 동적 컨텐츠에 대한 것이라면 파일이 실행 가능한지 검증하고
@@ -88,7 +88,7 @@ void doit(int fd)
       return;
     }
     // 그렇다면 동적 컨텐츠를 제공한다.
-    serve_dynamic(fd, filename, cgiargs);
+    serve_dynamic(fd, filename, cgiargs, method);
   }
 }
 
@@ -156,7 +156,7 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
   }  
 }
 
-void serve_static(int fd, char *filename, int filesize)
+void serve_static(int fd, char *filename, int filesize, char *method)
 {
   int srcfd;
   char *srcp, filetype[MAXLINE], buf[MAXBUF];
@@ -172,21 +172,22 @@ void serve_static(int fd, char *filename, int filesize)
   printf("Response headers: \n");
   printf("%s", buf);
 
-  #ifdef malloc
+  if (strcasecmp(method, "GET") == 0)
+  {
     srcfd = Open(filename, O_RDONLY, 0);
-    srcp = Malloc(filesize);  // filesize만큼 동적 메모리를 할당한다.
-    Rio_readn(srcfd, srcp, filesize); // 파일을 읽어서 srcp에 복사한다.
-    Close(srcfd);   // 파일 매핑이 완료되면 파일을 닫는다.
-    Rio_writen(fd, srcp, filesize); // 파일을 읽어서 버퍼쓰기만큼 작성한다.
-    free(srcp); // 사용한 가상 메모리를 반환한다.
-  #else
-    /* Send response body to client */
-    srcfd = Open(filename, O_RDONLY, 0);
-    srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
-    Close(srcfd);
-    Rio_writen(fd, srcp, filesize);
-    Munmap(srcp, filesize);
-  #endif
+    #ifdef malloc
+      srcp = Malloc(filesize);  // filesize만큼 동적 메모리를 할당한다.
+      Rio_readn(srcfd, srcp, filesize); // 파일을 읽어서 srcp에 복사한다.
+      Close(srcfd);   // 파일 매핑이 완료되면 파일을 닫는다.
+      Rio_writen(fd, srcp, filesize); // 파일을 읽어서 버퍼쓰기만큼 작성한다.
+      free(srcp); // 사용한 가상 메모리를 반환한다.
+    #else
+      srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
+      Close(srcfd);
+      Rio_writen(fd, srcp, filesize);
+      Munmap(srcp, filesize);
+    #endif
+  }
 }
 
 /**
@@ -219,7 +220,7 @@ void get_filetype(char *filename, char *filetype)
   }
 }
 
-void serve_dynamic(int fd, char *filename, char *cgiargs)
+void serve_dynamic(int fd, char *filename, char *cgiargs, char *method)
 {
   char buf[MAXLINE], *emptylist[] = {NULL};
 
@@ -232,6 +233,7 @@ void serve_dynamic(int fd, char *filename, char *cgiargs)
   if (Fork() == 0) { /* Child */
     /* Real server would set all CGI vars here */
     setenv("QUERY_STRING", cgiargs, 1);
+    setenv("REQUEST_METHOD", method, 1);
     Dup2(fd, STDOUT_FILENO);              /* Redirect stdout to client */
     Execve(filename, emptylist, environ); /* Run CGI program*/
   }
