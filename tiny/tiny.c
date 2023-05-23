@@ -32,10 +32,8 @@ int main(int argc, char **argv) {
   while (1) {
     clientlen = sizeof(clientaddr);
     // 연결 요청을 접수한다.
-    connfd = Accept(listenfd, (SA *)&clientaddr,
-                    &clientlen);  // line:netp:tiny:accept
-    Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE,
-                0);
+    connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);  // line:netp:tiny:accept
+    Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
     printf("Accepted connection from (%s, %s)\n", hostname, port);
     doit(connfd);   // line:netp:tiny:doit
     Close(connfd);  // line:netp:tiny:close
@@ -63,7 +61,7 @@ void doit(int fd)
     return;
   }
   read_requesthdrs(&rio);
-
+  
   /* Parse URI from GET request */
   is_static = parse_uri(uri, filename, cgiargs);  // static or dynamic
   // file이 디스크 상에 없으면, 에러 메시지를 즉시 클라이언트에게 보내고 반환한다.
