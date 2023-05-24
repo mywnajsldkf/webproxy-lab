@@ -1,7 +1,7 @@
 # Targets
 tiny/tiny
 tiny/cgi-bin/adder
-proxy
+proxy/proxy
 
 # MacOS
 .DS_Store
